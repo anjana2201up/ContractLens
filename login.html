@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ContractLens — Sign In</title>
+  <meta name="description" content="Sign in to ContractLens — AI-powered contract intelligence." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #07091a;
+      --surface:   #0d1228;
+      --blue:      #4f8dff;
+      --blue-b:    #7aaeff;
+      --violet:    #8b5cf6;
+      --cyan:      #22d3ee;
+      --emerald:   #10b981;
+      --rose:      #f43f5e;
+      --amber:     #f59e0b;
+      --text:      #f0f4ff;
+      --text-s:    #94a3b8;
+      --text-m:    #4b5d7a;
+      --glass:     rgba(13,18,40,0.75);
+      --border:    rgba(79,141,255,0.18);
+      --t: 0.25s ease;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: stretch;
+      overflow-x: hidden;
+    }
+
+    /* ── Animated background ── */
+    .bg-canvas {
+      position: fixed; inset: 0; z-index: 0;
+      overflow: hidden;
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.35;
+      animation: drift 20s ease-in-out infinite alternate;
+    }
+    .orb-1 { width: 500px; height: 500px; background: radial-gradient(circle, #4f8dff, transparent 70%); top: -100px; left: -100px; animation-delay: 0s; }
+    .orb-2 { width: 400px; height: 400px; background: radial-gradient(circle, #8b5cf6, transparent 70%); bottom: -80px; right: -80px; animation-delay: -7s; animation-duration: 18s; }
+    .orb-3 { width: 300px; height: 300px; background: radial-gradient(circle, #22d3ee, transparent 70%); top: 50%; left: 50%; transform: translate(-50%,-50%); animation-delay: -14s; animation-duration: 22s; opacity: 0.2; }
+    @keyframes drift {
+      0%   { transform: translate(0,0) scale(1); }
+      33%  { transform: translate(40px,-30px) scale(1.05); }
+      66%  { transform: translate(-20px,40px) scale(0.95); }
+      100% { transform: translate(30px,10px) scale(1.02); }
+    }
+
+    /* grid overlay */
+    .bg-grid {
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(79,141,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79,141,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    /* ── Layout ── */
+    .page-wrap {
+      position: relative; z-index: 1;
+      display: flex;
+      width: 100%;
+      min-height: 100vh;
+    }
+
+    /* ── Left branding panel ── */
+    .brand-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 60px 64px;
+      position: relative;
+      max-width: 560px;
+    }
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 56px;
+    }
+    .brand-logo-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--blue), var(--violet));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      box-shadow: 0 0 24px rgba(79,141,255,0.4);
+    }
+    .brand-logo-name {
+      font-size: 22px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff 40%, var(--blue-b));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .brand-tagline {
+      font-size: 11px; font-weight: 600; letter-spacing: 1.2px;
+      text-transform: uppercase; color: var(--text-m);
+      -webkit-text-fill-color: var(--text-m);
+    }
+
+    .brand-headline {
+      font-size: 42px;
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -1.5px;
+      margin-bottom: 20px;
+      background: linear-gradient(145deg, #ffffff 40%, var(--blue-b) 70%, var(--violet) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .brand-sub {
+      font-size: 16px;
+      color: var(--text-s);
+      line-height: 1.7;
+      max-width: 400px;
+      margin-bottom: 52px;
+    }
+
+    .features-list {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      animation: fadeUp 0.5s ease both;
+    }
+    .feature-item:nth-child(1) { animation-delay: 0.1s; }
+    .feature-item:nth-child(2) { animation-delay: 0.2s; }
+    .feature-item:nth-child(3) { animation-delay: 0.3s; }
+    .feature-item:nth-child(4) { animation-delay: 0.4s; }
+    .feature-item:nth-child(5) { animation-delay: 0.5s; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .feature-icon {
+      width: 36px; height: 36px; flex-shrink: 0;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .fi-blue   { background: rgba(79,141,255,0.15);  }
+    .fi-violet { background: rgba(139,92,246,0.15); }
+    .fi-cyan   { background: rgba(34,211,238,0.15);  }
+    .fi-green  { background: rgba(16,185,129,0.15);  }
+    .fi-amber  { background: rgba(245,158,11,0.15);  }
+    .feature-text {}
+    .feature-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .feature-desc  { font-size: 12.5px; color: var(--text-s); line-height: 1.5; }
+
+    .brand-trust {
+      display: flex; align-items: center; gap: 12px;
+      margin-top: 52px;
+    }
+    .trust-avatars { display: flex; }
+    .trust-avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      border: 2px solid var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700;
+      margin-left: -8px;
+    }
+    .trust-avatar:first-child { margin-left: 0; }
+    .trust-text { font-size: 12px; color: var(--text-s); }
+    .trust-text strong { color: var(--text); }
+
+    /* ── Right auth panel ── */
+    .auth-panel {
+      width: 480px;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 32px;
+    }
+    .auth-card {
+      width: 100%;
+      background: var(--glass);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(79,141,255,0.08);
+      animation: cardIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(24px) scale(0.98); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ── Tabs ── */
+    .auth-tabs {
+      display: flex;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 32px;
+    }
+    .auth-tab {
+      flex: 1;
+      padding: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: var(--text-s);
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all var(--t);
+      font-family: 'Inter', sans-serif;
+    }
+    .auth-tab.active {
+      background: linear-gradient(135deg, rgba(79,141,255,0.2), rgba(139,92,246,0.15));
+      color: var(--blue-b);
+      box-shadow: 0 0 0 1px rgba(79,141,255,0.3);
+    }
+
+    /* ── Forms ── */
+    .auth-form { display: none; }
+    .auth-form.active {
+      display: block;
+      animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(12px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .auth-form-title {
+      font-size: 22px; font-weight: 800; letter-spacing: -0.5px;
+      margin-bottom: 6px; color: var(--text);
+    }
+    .auth-form-sub {
+      font-size: 13.5px; color: var(--text-s);
+      margin-bottom: 28px; line-height: 1.5;
+    }
+
+    .form-group { margin-bottom: 18px; }
+    .form-label {
+      display: block;
+      font-size: 11.5px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.8px;
+      color: var(--text-s); margin-bottom: 8px;
+    }
+    .input-wrap {
+      position: relative;
+    }
+    .input-icon {
+      position: absolute; left: 14px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px; pointer-events: none;
+      opacity: 0.5;
+    }
+    .form-input {
+      width: 100%;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      color: var(--text);
+      padding: 13px 14px 13px 42px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: border-color var(--t), box-shadow var(--t);
+    }
+    .form-input:focus {
+      border-color: rgba(79,141,255,0.6);
+      box-shadow: 0 0 0 3px rgba(79,141,255,0.15);
+      background: rgba(79,141,255,0.05);
+    }
+    .form-input::placeholder { color: var(--text-m); }
+    .form-input.error { border-color: rgba(244,63,94,0.6) !important; }
+
+    .pwd-toggle {
+      position: absolute; right: 14px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none;
+      color: var(--text-m); cursor: pointer;
+      font-size: 16px; padding: 4px;
+      transition: color var(--t);
+    }
+    .pwd-toggle:hover { color: var(--text-s); }
+
+    /* password strength bar */
+    .pwd-strength {
+      height: 3px;
+      border-radius: 99px;
+      margin-top: 8px;
+      background: rgba(255,255,255,0.06);
+      overflow: hidden;
+    }
+    .pwd-strength-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.4s ease, background 0.4s ease;
+      width: 0%;
+    }
+    .pwd-strength-label { font-size: 11px; color: var(--text-m); margin-top: 4px; }
+
+    .field-error {
+      font-size: 11.5px; color: var(--rose);
+      margin-top: 6px; display: none;
+    }
+    .field-error.show { display: block; }
+
+    /* ── Submit button ── */
+    .auth-btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px; font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--blue), #3b6fd4 50%, var(--violet));
+      background-size: 200% 100%;
+      color: white;
+      margin-top: 8px;
+      box-shadow: 0 4px 20px rgba(79,141,255,0.4);
+      transition: all var(--t);
+      position: relative;
+      overflow: hidden;
+    }
+    .auth-btn::before {
+      content: '';
+      position: absolute; top: 0; left: -100%;
+      width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      transition: left 0.5s ease;
+    }
+    .auth-btn:hover::before { left: 150%; }
+    .auth-btn:hover {
+      box-shadow: 0 6px 28px rgba(79,141,255,0.55);
+      transform: translateY(-1px);
+    }
+    .auth-btn:active { transform: translateY(0); }
+    .auth-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+    .auth-btn .btn-spinner {
+      display: none;
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto;
+    }
+    .auth-btn.loading .btn-text { display: none; }
+    .auth-btn.loading .btn-spinner { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Error / Success banners ── */
+    .alert-banner {
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .alert-banner.show { display: flex; }
+    .alert-banner.error   { background: rgba(244,63,94,0.12);  border: 1px solid rgba(244,63,94,0.25); color: #fca5b1; }
+    .alert-banner.success { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.25); color: #6ee7b7; }
+
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 24px 0; color: var(--text-m); font-size: 12px;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px;
+      background: rgba(255,255,255,0.07);
+    }
+
+    .terms {
+      font-size: 11.5px; color: var(--text-m);
+      text-align: center; margin-top: 20px; line-height: 1.6;
+    }
+    .terms a { color: var(--blue); text-decoration: none; }
+    .terms a:hover { color: var(--blue-b); }
+
+    /* secure badge */
+    .secure-badge {
+      display: flex; align-items: center; justify-content: center;
+      gap: 6px; margin-top: 24px;
+      font-size: 11.5px; color: var(--text-m);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .brand-panel { display: none; }
+      .auth-panel  { width: 100%; padding: 24px 20px; }
+    }
+    @media (max-width: 400px) {
+      .auth-card { padding: 28px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Background -->
+<div class="bg-canvas">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+<div class="bg-grid"></div>
+
+<div class="page-wrap">
+
+  <!-- ══ LEFT BRANDING PANEL ════════════════════════════════ -->
+  <div class="brand-panel">
+    <div class="brand-logo">
+      <div class="brand-logo-icon">⚖️</div>
+      <div>
+        <div class="brand-logo-name">ContractLens</div>
+        <div class="brand-tagline">AI Contract Intelligence</div>
+      </div>
+    </div>
+
+    <h1 class="brand-headline">Contract intelligence<br />at your fingertips</h1>
+    <p class="brand-sub">Stop hunting through dense legal documents. Let AI extract obligations, flag risks, track deadlines, and answer your questions in seconds.</p>
+
+    <div class="features-list">
+      <div class="feature-item">
+        <div class="feature-icon fi-blue">🤖</div>
+        <div class="feature-text">
+          <div class="feature-title">AI-Powered Extraction</div>
+          <div class="feature-desc">Instantly pull parties, dates, obligations & payment terms from any contract</div>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon fi-violet">🚩</div>
+        <div class="feature-text">
+          <div class="feature-title">Risk Flagging</div>
+          <div class="feature-desc">Auto-identify indemnification, liability caps, auto-renewals & IP clauses</div>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon fi-cyan">📅</div>
+        <div class="feature-text">
+          <div class="feature-title">Deadline Tracking</div>
+          <div class="feature-desc">Never miss a renewal, payment, or termination notice again</div>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon fi-green">💬</div>
+        <div class="feature-text">
+          <div class="feature-title">Natural Language Chat</div>
+          <div class="feature-desc">Ask anything about your contracts in plain English</div>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon fi-amber">🔄</div>
+        <div class="feature-text">
+          <div class="feature-title">Version Comparison</div>
+          <div class="feature-desc">Side-by-side AI diff to spot every change between contract versions</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="brand-trust">
+      <div class="trust-avatars">
+        <div class="trust-avatar" style="background:linear-gradient(135deg,#4f8dff,#8b5cf6)">A</div>
+        <div class="trust-avatar" style="background:linear-gradient(135deg,#10b981,#22d3ee)">J</div>
+        <div class="trust-avatar" style="background:linear-gradient(135deg,#f59e0b,#f43f5e)">M</div>
+        <div class="trust-avatar" style="background:linear-gradient(135deg,#8b5cf6,#4f8dff)">S</div>
+      </div>
+      <div class="trust-text"><strong>500+ legal & ops teams</strong> trust ContractLens</div>
+    </div>
+  </div>
+
+  <!-- ══ RIGHT AUTH PANEL ═══════════════════════════════════ -->
+  <div class="auth-panel">
+    <div class="auth-card">
+
+      <!-- Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login-btn">Sign In</button>
+        <button class="auth-tab" id="tab-register-btn">Create Account</button>
+      </div>
+
+      <!-- ── LOGIN FORM ── -->
+      <form class="auth-form active" id="login-form" novalidate>
+        <div class="auth-form-title">Welcome back 👋</div>
+        <div class="auth-form-sub">Sign in to your ContractLens account</div>
+
+        <div class="alert-banner" id="login-error">
+          <span>⚠️</span><span id="login-error-msg">Something went wrong</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email address</label>
+          <div class="input-wrap">
+            <span class="input-icon">📧</span>
+            <input class="form-input" type="email" id="login-email" placeholder="you@company.com" autocomplete="email" required />
+          </div>
+          <div class="field-error" id="login-email-err">Please enter a valid email.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input class="form-input" type="password" id="login-password" placeholder="Your password" autocomplete="current-password" required />
+            <button type="button" class="pwd-toggle" id="login-pwd-toggle">👁</button>
+          </div>
+          <div class="field-error" id="login-pwd-err">Password is required.</div>
+        </div>
+
+        <button type="submit" class="auth-btn" id="login-btn">
+          <span class="btn-text">Sign In →</span>
+          <div class="btn-spinner"></div>
+        </button>
+
+        <div class="terms">
+          Don't have an account? <a href="#" id="switch-to-register">Create one free</a>
+        </div>
+      </form>
+
+      <!-- ── REGISTER FORM ── -->
+      <form class="auth-form" id="register-form" novalidate>
+        <div class="auth-form-title">Get started free ✨</div>
+        <div class="auth-form-sub">Create your ContractLens account — no credit card needed</div>
+
+        <div class="alert-banner" id="register-error">
+          <span>⚠️</span><span id="register-error-msg">Something went wrong</span>
+        </div>
+        <div class="alert-banner success" id="register-success">
+          <span>✅</span><span>Account created! Signing you in…</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <div class="input-wrap">
+            <span class="input-icon">👤</span>
+            <input class="form-input" type="text" id="reg-name" placeholder="Jane Smith" autocomplete="name" required />
+          </div>
+          <div class="field-error" id="reg-name-err">Please enter your name.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Work Email</label>
+          <div class="input-wrap">
+            <span class="input-icon">📧</span>
+            <input class="form-input" type="email" id="reg-email" placeholder="jane@company.com" autocomplete="email" required />
+          </div>
+          <div class="field-error" id="reg-email-err">Please enter a valid email.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input class="form-input" type="password" id="reg-password" placeholder="Min. 6 characters" autocomplete="new-password" required />
+            <button type="button" class="pwd-toggle" id="reg-pwd-toggle">👁</button>
+          </div>
+          <div class="pwd-strength"><div class="pwd-strength-fill" id="pwd-fill"></div></div>
+          <div class="pwd-strength-label" id="pwd-label"></div>
+          <div class="field-error" id="reg-pwd-err">Password must be at least 6 characters.</div>
+        </div>
+
+        <button type="submit" class="auth-btn" id="register-btn">
+          <span class="btn-text">Create Account →</span>
+          <div class="btn-spinner"></div>
+        </button>
+
+        <div class="terms">
+          Already have an account? <a href="#" id="switch-to-login">Sign in</a>
+        </div>
+        <div class="terms" style="margin-top:12px">
+          By signing up, you agree to our <a href="#">Terms</a> & <a href="#">Privacy Policy</a>
+        </div>
+      </form>
+
+      <!-- Secure badge -->
+      <div class="secure-badge">
+        🔒 Encrypted · Secure · Private
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page-wrap -->
+
+<script>
+  const API = 'http://localhost:3000/api';
+
+  // ── Tab switching ──
+  function showTab(tab) {
+    document.getElementById('login-form').classList.toggle('active', tab === 'login');
+    document.getElementById('register-form').classList.toggle('active', tab === 'register');
+    document.getElementById('tab-login-btn').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-register-btn').classList.toggle('active', tab === 'register');
+    clearErrors();
+  }
+  document.getElementById('tab-login-btn').addEventListener('click', () => showTab('login'));
+  document.getElementById('tab-register-btn').addEventListener('click', () => showTab('register'));
+  document.getElementById('switch-to-register').addEventListener('click', e => { e.preventDefault(); showTab('register'); });
+  document.getElementById('switch-to-login').addEventListener('click', e => { e.preventDefault(); showTab('login'); });
+
+  // ── Password visibility ──
+  function bindPwdToggle(toggleId, inputId) {
+    document.getElementById(toggleId).addEventListener('click', () => {
+      const input = document.getElementById(inputId);
+      input.type = input.type === 'password' ? 'text' : 'password';
+    });
+  }
+  bindPwdToggle('login-pwd-toggle', 'login-password');
+  bindPwdToggle('reg-pwd-toggle', 'reg-password');
+
+  // ── Password strength ──
+  document.getElementById('reg-password').addEventListener('input', function() {
+    const val = this.value;
+    const fill = document.getElementById('pwd-fill');
+    const label = document.getElementById('pwd-label');
+    let strength = 0;
+    if (val.length >= 6)  strength++;
+    if (val.length >= 10) strength++;
+    if (/[A-Z]/.test(val)) strength++;
+    if (/[0-9]/.test(val)) strength++;
+    if (/[^A-Za-z0-9]/.test(val)) strength++;
+
+    const levels = [
+      { pct: 0,   color: '',          text: '' },
+      { pct: 20,  color: '#f43f5e',   text: 'Weak' },
+      { pct: 40,  color: '#f59e0b',   text: 'Fair' },
+      { pct: 60,  color: '#f59e0b',   text: 'Good' },
+      { pct: 80,  color: '#10b981',   text: 'Strong' },
+      { pct: 100, color: '#10b981',   text: 'Very strong' },
+    ];
+    const l = levels[strength];
+    fill.style.width = l.pct + '%';
+    fill.style.background = l.color;
+    label.textContent = l.text;
+    label.style.color = l.color;
+  });
+
+  // ── Error helpers ──
+  function showBanner(id, msgId, message, type = 'error') {
+    const el = document.getElementById(id);
+    el.className = `alert-banner ${type} show`;
+    if (msgId) document.getElementById(msgId).textContent = message;
+  }
+  function hideBanner(id) {
+    document.getElementById(id).classList.remove('show');
+  }
+  function showFieldError(id) { document.getElementById(id).classList.add('show'); }
+  function hideFieldError(id) { document.getElementById(id).classList.remove('show'); }
+  function clearErrors() {
+    ['login-error','register-error','register-success'].forEach(hideBanner);
+    ['login-email-err','login-pwd-err','reg-name-err','reg-email-err','reg-pwd-err'].forEach(hideFieldError);
+    document.querySelectorAll('.form-input').forEach(el => el.classList.remove('error'));
+  }
+
+  function setLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    btn.disabled = loading;
+    btn.classList.toggle('loading', loading);
+  }
+
+  // ── Check if already logged in ──
+  const existingToken = localStorage.getItem('cl_token');
+  if (existingToken) {
+    fetch(`${API}/auth/me`, { headers: { 'Authorization': `Bearer ${existingToken}` } })
+      .then(r => r.ok ? (window.location.href = '/index.html') : null)
+      .catch(() => {});
+  }
+
+  // ── Login submit ──
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearErrors();
+    const email    = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    let valid = true;
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showFieldError('login-email-err');
+      document.getElementById('login-email').classList.add('error');
+      valid = false;
+    }
+    if (!password) {
+      showFieldError('login-pwd-err');
+      document.getElementById('login-password').classList.add('error');
+      valid = false;
+    }
+    if (!valid) return;
+
+    setLoading('login-btn', true);
+    try {
+      const res  = await fetch(`${API}/auth/login`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Login failed');
+      localStorage.setItem('cl_token', data.token);
+      localStorage.setItem('cl_user',  JSON.stringify(data.user));
+      window.location.href = '/index.html';
+    } catch (err) {
+      showBanner('login-error', 'login-error-msg', err.message);
+    } finally {
+      setLoading('login-btn', false);
+    }
+  });
+
+  // ── Register submit ──
+  document.getElementById('register-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearErrors();
+    const name     = document.getElementById('reg-name').value.trim();
+    const email    = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    let valid = true;
+
+    if (!name) { showFieldError('reg-name-err'); document.getElementById('reg-name').classList.add('error'); valid = false; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showFieldError('reg-email-err'); document.getElementById('reg-email').classList.add('error'); valid = false;
+    }
+    if (!password || password.length < 6) {
+      showFieldError('reg-pwd-err'); document.getElementById('reg-password').classList.add('error'); valid = false;
+    }
+    if (!valid) return;
+
+    setLoading('register-btn', true);
+    try {
+      const res  = await fetch(`${API}/auth/register`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ name, email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Registration failed');
+      localStorage.setItem('cl_token', data.token);
+      localStorage.setItem('cl_user',  JSON.stringify(data.user));
+      showBanner('register-success', null, '', 'success');
+      await new Promise(r => setTimeout(r, 800));
+      window.location.href = '/index.html';
+    } catch (err) {
+      showBanner('register-error', 'register-error-msg', err.message);
+    } finally {
+      setLoading('register-btn', false);
+    }
+  });
+</script>
+</body>
+</html>

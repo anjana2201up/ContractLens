@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ContractLens — AI Contract Intelligence</title>
+  <meta name="description" content="AI-powered contract review, obligation tracking, and deadline management for business teams." />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ══ SIDEBAR ══════════════════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">⚖️</div>
+      <div>
+        <div class="logo-text">ContractLens</div>
+        <div class="logo-sub">AI Contract Intelligence</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <span class="nav-section-label">Overview</span>
+      <div class="nav-item active" data-view="dashboard" id="nav-dashboard">
+        <span class="nav-icon">🏠</span><span>Dashboard</span>
+      </div>
+      <div class="nav-item" data-view="library" id="nav-library">
+        <span class="nav-icon">📂</span><span>Contract Library</span>
+      </div>
+
+      <span class="nav-section-label">Management</span>
+      <div class="nav-item" data-view="tracker" id="nav-tracker">
+        <span class="nav-icon">✅</span><span>Obligation Tracker</span>
+      </div>
+      <div class="nav-item" data-view="alerts" id="nav-alerts">
+        <span class="nav-icon">🔔</span><span>Alerts</span>
+        <span class="nav-badge hidden" id="alerts-badge">0</span>
+      </div>
+      <div class="nav-item" data-view="compare" id="nav-compare">
+        <span class="nav-icon">🔄</span><span>Compare Contracts</span>
+      </div>
+
+      <span class="nav-section-label">Account</span>
+      <div class="nav-item" data-view="settings" id="nav-settings">
+        <span class="nav-icon">⚙️</span><span>Settings</span>
+      </div>
+    </nav>
+
+    <!-- User profile footer -->
+    <div class="sidebar-footer">
+      <div class="user-profile" id="user-profile">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">Loading…</div>
+          <div class="user-email" id="user-email"></div>
+        </div>
+        <button class="btn btn-ghost btn-icon" id="logout-btn" title="Sign out">↩</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══ MAIN CONTENT ═════════════════════════════════════════ -->
+  <div class="main-content">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-actions">
+        <div class="api-key-pill" id="api-key-pill">
+          <span class="pill-dot" id="api-key-dot">●</span>
+          <span id="api-key-pill-label">No API Key</span>
+        </div>
+        <button class="btn btn-ghost btn-icon" id="export-btn" title="Export data">📤</button>
+        <button class="btn btn-primary" id="upload-btn-top">
+          <span>＋</span> Upload Contract
+        </button>
+      </div>
+    </header>
+
+    <!-- ── DASHBOARD ───────────────────────────────────────── -->
+    <section class="page active" id="page-dashboard">
+      <div class="welcome-banner hidden" id="welcome-banner">
+        <div class="welcome-title">Welcome to ContractLens ⚖️</div>
+        <div class="welcome-sub">Your AI-powered contract intelligence hub. Upload contracts to extract obligations, track deadlines, and get instant answers about your agreements.</div>
+        <div class="flex gap-3 mt-4">
+          <button class="btn btn-primary btn-lg" id="welcome-upload-btn">📄 Upload Your First Contract</button>
+          <button class="btn btn-secondary btn-lg" id="welcome-settings-btn">⚙️ Add API Key</button>
+        </div>
+      </div>
+
+      <div class="stat-grid" id="stat-grid">
+        <div class="stat-card" style="--accent:linear-gradient(90deg,#4f8dff,#8b5cf6)">
+          <div class="stat-label">Total Contracts</div>
+          <div class="stat-value" id="stat-total" data-target="0">0</div>
+          <div class="stat-delta" id="stat-total-sub">No contracts yet</div>
+          <div class="stat-icon">📄</div>
+        </div>
+        <div class="stat-card" style="--accent:linear-gradient(90deg,#f59e0b,#f43f5e)">
+          <div class="stat-label">Expiring in 30 Days</div>
+          <div class="stat-value text-warning" id="stat-expiring30" data-target="0">0</div>
+          <div class="stat-delta" id="stat-expiring30-sub">None imminent</div>
+          <div class="stat-icon">⚠️</div>
+        </div>
+        <div class="stat-card" style="--accent:linear-gradient(90deg,#f43f5e,#be123c)">
+          <div class="stat-label">Overdue Obligations</div>
+          <div class="stat-value text-danger" id="stat-overdue" data-target="0">0</div>
+          <div class="stat-delta" id="stat-overdue-sub">All clear</div>
+          <div class="stat-icon">🚨</div>
+        </div>
+        <div class="stat-card" style="--accent:linear-gradient(90deg,#8b5cf6,#22d3ee)">
+          <div class="stat-label">Flagged Clauses</div>
+          <div class="stat-value text-accent" id="stat-flags" data-target="0">0</div>
+          <div class="stat-delta" id="stat-flags-sub">Requiring review</div>
+          <div class="stat-icon">🚩</div>
+        </div>
+      </div>
+
+      <div class="grid-2 mb-6">
+        <div class="card">
+          <div class="card-title">📅 Upcoming Deadlines</div>
+          <div id="dashboard-timeline">
+            <div class="empty-state" style="padding:var(--sp-8)">
+              <span style="font-size:32px;opacity:.4">📅</span>
+              <p>Upload contracts to see your obligation timeline</p>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">🔔 Recent Alerts</div>
+          <div id="dashboard-alerts">
+            <div class="empty-state" style="padding:var(--sp-8)">
+              <span style="font-size:32px;opacity:.4">🔔</span>
+              <p>No alerts yet</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="quick-action" id="qa-upload">
+          <span class="quick-action-icon">📤</span>
+          <span class="quick-action-label">Upload Contract</span>
+        </div>
+        <div class="quick-action" id="qa-compare">
+          <span class="quick-action-icon">🔄</span>
+          <span class="quick-action-label">Compare Versions</span>
+        </div>
+        <div class="quick-action" id="qa-tracker">
+          <span class="quick-action-icon">✅</span>
+          <span class="quick-action-label">View Obligations</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── LIBRARY ──────────────────────────────────────────── -->
+    <section class="page" id="page-library">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Contract Library</div>
+          <div class="section-subtitle" id="library-subtitle">All your uploaded contracts</div>
+        </div>
+        <button class="btn btn-primary" id="library-upload-btn">📄 Upload Contract</button>
+      </div>
+
+      <div class="filter-bar">
+        <input type="text" class="input input-search" id="library-search" placeholder="Search contracts…" style="max-width:280px" />
+        <button class="filter-chip active" data-filter="all">All</button>
+        <button class="filter-chip" data-filter="active">Active</button>
+        <button class="filter-chip" data-filter="expiring">Expiring Soon</button>
+        <button class="filter-chip" data-filter="expired">Expired</button>
+        <button class="filter-chip" data-filter="draft">Draft</button>
+        <select class="input" id="sort-select" style="max-width:200px">
+          <option value="uploaded">Recently Added</option>
+          <option value="expiration">Expiration Date</option>
+          <option value="name">Name A–Z</option>
+        </select>
+      </div>
+
+      <div class="contract-grid" id="contract-grid">
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+      </div>
+    </section>
+
+    <!-- ── CONTRACT DETAIL ────────────────────────────────── -->
+    <section class="page" id="page-detail">
+      <div class="section-header" id="detail-header">
+        <div class="flex items-center gap-3">
+          <button class="btn btn-ghost btn-icon" id="detail-back-btn">←</button>
+          <div>
+            <div class="section-title" id="detail-title">Contract Detail</div>
+            <div class="flex items-center gap-2 mt-2" id="detail-badges"></div>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn btn-secondary" id="detail-compare-btn">🔄 Compare</button>
+          <button class="btn btn-danger btn-sm" id="detail-delete-btn">🗑 Delete</button>
+        </div>
+      </div>
+
+      <div id="detail-processing" class="hidden">
+        <div class="processing-state">
+          <div class="big-spinner"></div>
+          <h3>Analyzing Contract…</h3>
+          <p id="processing-step">Claude AI is extracting key information</p>
+          <div class="progress-bar mt-4" style="max-width:360px;margin:var(--sp-4) auto 0">
+            <div class="progress-fill" id="processing-progress" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="detail-content" class="hidden">
+        <div class="tabs">
+          <button class="tab active" data-tab="overview">📋 Overview</button>
+          <button class="tab" data-tab="obligations">✅ Obligations</button>
+          <button class="tab" data-tab="flagged">🚩 Flagged Clauses</button>
+          <button class="tab" data-tab="timeline">📅 Timeline</button>
+          <button class="tab" data-tab="summary">📝 AI Summary</button>
+          <button class="tab" data-tab="chat">💬 Ask AI</button>
+        </div>
+
+        <div class="tab-content active" id="tab-overview">
+          <div class="detail-layout">
+            <div class="detail-main">
+              <div class="info-grid" id="contract-info-grid"></div>
+              <div class="card mb-4"><div class="card-title">💼 Parties</div><div id="parties-list"></div></div>
+              <div class="card mb-4"><div class="card-title">💳 Payment Terms</div><div id="payment-terms-content" class="summary-text"></div></div>
+              <div class="card"><div class="card-title">❌ Termination Conditions</div><div id="termination-content"></div></div>
+            </div>
+            <div class="detail-sidebar">
+              <div class="card"><div class="card-title">⚡ Quick Stats</div><div id="quick-stats"></div></div>
+              <div class="card"><div class="card-title">🔄 Renewal Terms</div><div id="renewal-content" class="summary-text text-sm"></div></div>
+              <div class="card"><div class="card-title">📎 Source References</div><div id="source-refs" class="text-sm text-muted"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-obligations">
+          <div class="filter-bar mb-4">
+            <button class="filter-chip active" data-ofilter="all">All Parties</button>
+            <div id="party-filters"></div>
+            <button class="filter-chip active" data-ofilter-status="all">All</button>
+            <button class="filter-chip" data-ofilter-status="pending">Pending</button>
+            <button class="filter-chip" data-ofilter-status="complete">Complete</button>
+            <button class="filter-chip" data-ofilter-status="overdue">Overdue</button>
+          </div>
+          <div class="obligation-list" id="obligations-list"></div>
+        </div>
+
+        <div class="tab-content" id="tab-flagged">
+          <div class="highlight-box" id="flagged-summary-box"></div>
+          <div class="flagged-list" id="flagged-list"></div>
+        </div>
+
+        <div class="tab-content" id="tab-timeline">
+          <div class="timeline" id="detail-timeline"></div>
+        </div>
+
+        <div class="tab-content" id="tab-summary">
+          <div id="summary-content"></div>
+        </div>
+
+        <div class="tab-content" id="tab-chat">
+          <div class="chat-container">
+            <div class="chat-messages" id="chat-messages">
+              <div class="chat-message assistant">
+                <div class="chat-avatar">⚖️</div>
+                <div class="chat-bubble">Hello! I've analyzed this contract and I'm ready to answer your questions. Ask me about specific clauses, obligations, deadlines, or anything else.</div>
+              </div>
+            </div>
+            <div class="chat-input-area">
+              <input class="input flex-1" type="text" id="chat-input" placeholder="Ask about this contract…" />
+              <button class="btn btn-primary" id="chat-send-btn">Send ↑</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── OBLIGATION TRACKER ─────────────────────────────── -->
+    <section class="page" id="page-tracker">
+      <div class="section-header">
+        <div><div class="section-title">Obligation Tracker</div><div class="section-subtitle">All obligations across all contracts</div></div>
+      </div>
+      <div class="filter-bar mb-6">
+        <input type="text" class="input input-search" id="tracker-search" placeholder="Search obligations…" style="max-width:240px" />
+        <select class="input" id="tracker-contract-filter" style="max-width:200px"><option value="all">All Contracts</option></select>
+        <button class="filter-chip active" data-tfilter="all">All</button>
+        <button class="filter-chip" data-tfilter="overdue">Overdue</button>
+        <button class="filter-chip" data-tfilter="due-soon">Due Soon</button>
+        <button class="filter-chip" data-tfilter="pending">Pending</button>
+        <button class="filter-chip" data-tfilter="complete">Complete</button>
+      </div>
+      <div class="obligation-list" id="tracker-list">
+        <div class="empty-state"><span class="empty-icon">✅</span><h3>No obligations yet</h3><p>Upload contracts to extract obligations automatically</p></div>
+      </div>
+    </section>
+
+    <!-- ── ALERTS ──────────────────────────────────────────── -->
+    <section class="page" id="page-alerts">
+      <div class="section-header">
+        <div><div class="section-title">Alerts &amp; Reminders</div><div class="section-subtitle">Upcoming renewals, deadlines, and critical dates</div></div>
+        <select class="input" id="alert-window-select" style="max-width:180px">
+          <option value="30">Next 30 days</option>
+          <option value="60">Next 60 days</option>
+          <option value="90" selected>Next 90 days</option>
+          <option value="365">Next year</option>
+        </select>
+      </div>
+      <div class="flex gap-3 mb-6 flex-wrap">
+        <button class="filter-chip active" data-afilter="all">All Alerts</button>
+        <button class="filter-chip" data-afilter="renewal">🔄 Renewal</button>
+        <button class="filter-chip" data-afilter="payment">💳 Payment</button>
+        <button class="filter-chip" data-afilter="termination">❌ Termination</button>
+        <button class="filter-chip" data-afilter="obligation">✅ Obligation</button>
+      </div>
+      <div id="alerts-list" class="flex flex-col gap-3">
+        <div class="empty-state"><span class="empty-icon">🔔</span><h3>No alerts</h3><p>Upload contracts to generate deadline alerts</p></div>
+      </div>
+    </section>
+
+    <!-- ── COMPARE ─────────────────────────────────────────── -->
+    <section class="page" id="page-compare">
+      <div class="section-header">
+        <div><div class="section-title">Compare Contracts</div><div class="section-subtitle">Identify changes between contract versions</div></div>
+      </div>
+      <div class="card mb-6">
+        <div class="grid-2 mb-5">
+          <div class="form-group mb-0">
+            <label class="form-label">Contract A (Base Version)</label>
+            <select class="input" id="compare-a-select"><option value="">— Select contract —</option></select>
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label">Contract B (New Version)</label>
+            <select class="input" id="compare-b-select"><option value="">— Select contract —</option></select>
+          </div>
+        </div>
+        <button class="btn btn-violet" id="run-compare-btn">🔄 Run AI Comparison</button>
+      </div>
+      <div id="compare-results" class="hidden">
+        <div class="change-summary" id="compare-summary-box">
+          <h3>🤖 AI Change Summary</h3>
+          <div id="compare-summary-text" class="summary-text"></div>
+        </div>
+        <div class="compare-grid">
+          <div class="compare-panel">
+            <div class="compare-panel-header">📄 <span id="compare-a-label">Contract A</span><span class="badge badge-info" style="margin-left:auto">Base</span></div>
+            <div class="diff-content" id="compare-a-content"></div>
+          </div>
+          <div class="compare-panel">
+            <div class="compare-panel-header">📄 <span id="compare-b-label">Contract B</span><span class="badge badge-medium" style="margin-left:auto">Updated</span></div>
+            <div class="diff-content" id="compare-b-content"></div>
+          </div>
+        </div>
+      </div>
+      <div id="compare-processing" class="hidden">
+        <div class="processing-state">
+          <div class="big-spinner"></div>
+          <h3>Comparing Contracts…</h3>
+          <p>AI is analyzing differences between the two versions</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SETTINGS ────────────────────────────────────────── -->
+    <section class="page" id="page-settings">
+      <div class="section-header">
+        <div><div class="section-title">Settings</div><div class="section-subtitle">Manage your account and preferences</div></div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">👤 Profile</div>
+        <div class="settings-row">
+          <div><div class="settings-row-label">Display Name</div><div class="settings-row-sub">Your name shown in the app</div></div>
+          <div class="flex gap-2 items-center" style="min-width:260px">
+            <input type="text" class="input flex-1" id="settings-name" placeholder="Your name" />
+            <button class="btn btn-secondary" id="save-name-btn">Save</button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-row-label">Email</div><div class="settings-row-sub">Your account email (read-only)</div></div>
+          <div class="text-sm text-muted" id="settings-email">—</div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">🔑 AI Configuration</div>
+
+        <!-- Global key status banner -->
+        <div id="global-key-banner" class="hidden" style="display:none;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;margin-bottom:16px;font-size:13px;font-weight:600"></div>
+
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">Personal API Key <span style="font-size:10px;font-weight:400;color:var(--text-muted)">(optional if global key active)</span></div>
+            <div class="settings-row-sub">Overrides the global key. Get yours at <a href="https://console.anthropic.com" target="_blank" style="color:var(--blue)">console.anthropic.com</a></div>
+          </div>
+          <div class="flex gap-2 items-center" style="min-width:300px">
+            <input type="password" class="input flex-1" id="api-key-input" placeholder="sk-ant-…" />
+            <button class="btn btn-primary" id="save-api-key-btn">Save</button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-row-label">AI Model</div><div class="settings-row-sub">Claude model used for all AI analysis</div></div>
+          <select class="input" id="model-select" style="max-width:220px">
+            <option value="claude-sonnet-4-5">Claude Sonnet 4.5</option>
+            <option value="claude-opus-4-5">Claude Opus 4.5</option>
+            <option value="claude-haiku-4-5">Claude Haiku 4.5</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">🔔 Alert Thresholds</div>
+        <div class="settings-row">
+          <div><div class="settings-row-label">Critical Alert Window</div><div class="settings-row-sub">Days before deadline to flag critical</div></div>
+          <select class="input" id="critical-threshold" style="max-width:160px">
+            <option value="7">7 days</option>
+            <option value="14" selected>14 days</option>
+            <option value="30">30 days</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-row-label">Warning Alert Window</div><div class="settings-row-sub">Days before deadline to flag warnings</div></div>
+          <select class="input" id="warning-threshold" style="max-width:160px">
+            <option value="30">30 days</option>
+            <option value="45" selected>45 days</option>
+            <option value="60">60 days</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">💾 Data Management</div>
+        <div class="settings-row">
+          <div><div class="settings-row-label">Export All Data</div><div class="settings-row-sub">Download contracts and analyses as JSON</div></div>
+          <button class="btn btn-secondary" id="export-data-btn">📤 Export JSON</button>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-row-label">Import Data</div><div class="settings-row-sub">Restore from a previous export</div></div>
+          <label class="btn btn-secondary" style="cursor:pointer">📥 Import JSON<input type="file" accept=".json" id="import-data-input" style="display:none" /></label>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-row-label">Sign Out</div><div class="settings-row-sub">Log out of your account</div></div>
+          <button class="btn btn-danger" id="signout-btn">↩ Sign Out</button>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /main-content -->
+</div><!-- /app -->
+
+<!-- ══ UPLOAD MODAL ══════════════════════════════════════════ -->
+<div class="modal-backdrop" id="upload-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📄 Upload Contract</div>
+      <button class="modal-close" id="upload-modal-close">✕</button>
+    </div>
+
+    <div id="upload-form-state">
+      <div class="form-group">
+        <label class="form-label">Contract Name</label>
+        <input type="text" class="input" id="upload-name" placeholder="e.g. Vendor Agreement — Acme Corp 2024" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contract Type</label>
+        <select class="input" id="upload-type">
+          <option value="vendor">Vendor Agreement</option>
+          <option value="customer">Customer Contract</option>
+          <option value="employment">Employment Agreement</option>
+          <option value="partnership">Partnership Agreement</option>
+          <option value="nda">NDA / Confidentiality</option>
+          <option value="saas">SaaS / Software License</option>
+          <option value="service">Service Agreement</option>
+          <option value="lease">Lease Agreement</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Document File</label>
+        <div class="upload-zone" id="upload-dropzone">
+          <input type="file" id="file-input" accept=".pdf,.txt,.docx" />
+          <span class="upload-icon">☁️</span>
+          <div class="upload-title">Drop your contract here</div>
+          <div class="upload-sub">or click to browse files</div>
+          <div class="upload-formats">Supports PDF, DOCX, and TXT — up to 15 MB</div>
+        </div>
+        <div id="file-selected" class="hidden mt-2">
+          <div class="flex items-center gap-2 p-3" style="background:rgba(79,141,255,.08);border:1px solid rgba(79,141,255,.2);border-radius:var(--r-md)">
+            <span>📎</span>
+            <span class="text-sm flex-1 truncate" id="file-name-display"></span>
+            <span class="text-xs text-muted" id="file-size-display"></span>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes (Optional)</label>
+        <textarea class="input" id="upload-notes" placeholder="Any additional context…" rows="2"></textarea>
+      </div>
+      <div class="flex gap-3 mt-4">
+        <button class="btn btn-primary flex-1" id="start-analysis-btn">🤖 Analyze with AI</button>
+        <button class="btn btn-secondary" id="upload-cancel-btn">Cancel</button>
+      </div>
+      <div class="text-xs text-muted mt-3" style="text-align:center">Contract text is sent to Claude AI for analysis.</div>
+    </div>
+
+    <div id="upload-processing-state" class="hidden">
+      <div class="processing-state">
+        <div class="big-spinner"></div>
+        <h3 id="upload-step-title">Extracting Text…</h3>
+        <p id="upload-step-desc">Parsing document contents</p>
+        <div class="progress-bar mt-4" style="max-width:300px;margin:var(--sp-4) auto 0">
+          <div class="progress-fill" id="upload-progress" style="width:10%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FAB ══════════════════════════════════════════════════ -->
+<button class="fab" id="fab-btn" title="Upload contract">＋</button>
+
+<!-- ══ TOAST ════════════════════════════════════════════════ -->
+<div id="toast-container"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+# =====================================================
+#  ContractLens — .gitignore
+# =====================================================
+
+# Environment variables (contains API keys — NEVER commit this)
+.env
+
+# Node modules
+node_modules/
+
+# Database files (user data — keep private)
+db/
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+
+# Temp
+*.tmp
+*.temp
