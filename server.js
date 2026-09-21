@@ -15,63 +15,52 @@ const PORT           = process.env.PORT        || 3000;
 const JWT_SECRET     = process.env.JWT_SECRET  || 'contractlens-super-secret-key-2024';
 const GLOBAL_API_KEY = process.env.GEMINI_API_KEY || '';
 const GLOBAL_MODEL   = process.env.GEMINI_MODEL   || 'gemini-1.5-flash';
-const UPSTASH_URL    = process.env.UPSTASH_REDIS_REST_URL   || process.env.KV_REST_API_URL || '';
-const UPSTASH_TOKEN  = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN || '';
+const MONGODB_URI    = process.env.MONGODB_URI    || '';
 
 // ─── Helpers ──────────────────────────────────────────────────
 function getEffectiveKey(user)   { return (user?.apiKey) || GLOBAL_API_KEY || null; }
 function getEffectiveModel(user) { return (user?.model)  || GLOBAL_MODEL; }
 function hasGlobalKey() { return !!GLOBAL_API_KEY && !GLOBAL_API_KEY.includes('paste-your-key'); }
 
-// ─── Upstash Redis (REST API — no driver needed) ──────────────
-// Each call sends a Redis command array via HTTP POST
-async function redis(...args) {
-  if (!UPSTASH_URL || !UPSTASH_TOKEN) {
-    throw new Error('Redis not configured. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in .env');
-  }
-  const res = await fetch(UPSTASH_URL, {
-    method:  'POST',
-    headers: { Authorization: `Bearer ${UPSTASH_TOKEN}`, 'Content-Type': 'application/json' },
-    body:    JSON.stringify(args),
-  });
-  const data = await res.json();
-  if (data.error) throw new Error('Redis: ' + data.error);
-  return data.result;
+const { MongoClient } = require('mongodb');
+let cachedDb = null;
+
+async function getDb() {
+  if (cachedDb) return cachedDb;
+  if (!MONGODB_URI) throw new Error('MONGODB_URI is not set in environment variables');
+  const client = await MongoClient.connect(MONGODB_URI);
+  cachedDb = client.db('contractlens');
+  return cachedDb;
 }
 
 // ─── DB Helpers ───────────────────────────────────────────────
 async function getUserById(id) {
-  const raw = await redis('GET', `user:${id}`);
-  return raw ? JSON.parse(raw) : null;
+  const db = await getDb();
+  return await db.collection('users').findOne({ id });
 }
 async function getUserByEmail(email) {
-  const id = await redis('GET', `email:${email.toLowerCase()}`);
-  return id ? getUserById(id) : null;
+  const db = await getDb();
+  return await db.collection('users').findOne({ email: email.toLowerCase() });
 }
 async function saveUser(user) {
-  await redis('SET', `user:${user.id}`, JSON.stringify(user));
-  await redis('SET', `email:${user.email}`, user.id);
+  const db = await getDb();
+  await db.collection('users').updateOne({ id: user.id }, { $set: user }, { upsert: true });
 }
 async function getContractById(id) {
-  const raw = await redis('GET', `contract:${id}`);
-  return raw ? JSON.parse(raw) : null;
+  const db = await getDb();
+  return await db.collection('contracts').findOne({ id });
 }
 async function getUserContracts(userId) {
-  const ids = await redis('LRANGE', `ucontracts:${userId}`, '0', '-1');
-  if (!ids || ids.length === 0) return [];
-  const all = await Promise.all(ids.map(id => getContractById(id)));
-  return all.filter(Boolean).sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
+  const db = await getDb();
+  return await db.collection('contracts').find({ userId }).sort({ uploadedAt: -1 }).toArray();
 }
 async function saveContract(contract) {
-  const exists = await redis('EXISTS', `contract:${contract.id}`);
-  await redis('SET', `contract:${contract.id}`, JSON.stringify(contract));
-  if (!exists) await redis('LPUSH', `ucontracts:${contract.userId}`, contract.id);
+  const db = await getDb();
+  await db.collection('contracts').updateOne({ id: contract.id }, { $set: contract }, { upsert: true });
 }
 async function removeContract(id) {
-  const c = await getContractById(id);
-  if (!c) return;
-  await redis('DEL', `contract:${id}`);
-  await redis('LREM', `ucontracts:${c.userId}`, '0', id);
+  const db = await getDb();
+  await db.collection('contracts').deleteOne({ id });
 }
 
 // ─── Middleware ───────────────────────────────────────────────
@@ -349,7 +338,7 @@ app.post('/api/import', authMiddleware, async (req, res) => {
 
 // Health check (useful for Vercel)
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', upstash: !!UPSTASH_URL, apiKey: hasGlobalKey(), ts: new Date().toISOString() });
+  res.json({ status: 'ok', database: !!MONGODB_URI, apiKey: hasGlobalKey(), ts: new Date().toISOString() });
 });
 
 app.get('*', (req, res) => {
@@ -361,7 +350,7 @@ app.listen(PORT, () => {
   console.log(`\n  ⚖️  ContractLens v2`);
   console.log(`  🚀  http://localhost:${PORT}/login.html`);
   console.log(`  ${hasGlobalKey() ? '✅' : '⚠️ '} API Key: ${hasGlobalKey() ? 'ACTIVE' : 'not set'}`);
-  console.log(`  ${UPSTASH_URL ? '✅' : '⚠️ '} Upstash: ${UPSTASH_URL ? 'configured' : 'not set — add UPSTASH_REDIS_REST_URL'}\n`);
+  console.log(`  ${MONGODB_URI ? '✅' : '⚠️ '} MongoDB: ${MONGODB_URI ? 'configured' : 'not set — add MONGODB_URI'}\n`);
 });
 
 module.exports = app;
