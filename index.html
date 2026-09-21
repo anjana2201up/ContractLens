@@ -207,7 +207,7 @@
         <div class="processing-state">
           <div class="big-spinner"></div>
           <h3>Analyzing Contract…</h3>
-          <p id="processing-step">Claude AI is extracting key information</p>
+          <p id="processing-step">Gemini AI is extracting key information</p>
           <div class="progress-bar mt-4" style="max-width:360px;margin:var(--sp-4) auto 0">
             <div class="progress-fill" id="processing-progress" style="width:0%"></div>
           </div>
@@ -397,7 +397,7 @@
         <div class="settings-row">
           <div>
             <div class="settings-row-label">Personal API Key <span style="font-size:10px;font-weight:400;color:var(--text-muted)">(optional if global key active)</span></div>
-            <div class="settings-row-sub">Overrides the global key. Get yours at <a href="https://console.anthropic.com" target="_blank" style="color:var(--blue)">console.anthropic.com</a></div>
+            <div class="settings-row-sub">Overrides the global key. Get yours at <a href="https://aistudio.google.com" target="_blank" style="color:var(--blue)">aistudio.google.com</a></div>
           </div>
           <div class="flex gap-2 items-center" style="min-width:300px">
             <input type="password" class="input flex-1" id="api-key-input" placeholder="sk-ant-…" />
@@ -405,11 +405,10 @@
           </div>
         </div>
         <div class="settings-row">
-          <div><div class="settings-row-label">AI Model</div><div class="settings-row-sub">Claude model used for all AI analysis</div></div>
+          <div><div class="settings-row-label">AI Model</div><div class="settings-row-sub">Gemini model used for all AI analysis</div></div>
           <select class="input" id="model-select" style="max-width:220px">
-            <option value="claude-sonnet-4-5">Claude Sonnet 4.5</option>
-            <option value="claude-opus-4-5">Claude Opus 4.5</option>
-            <option value="claude-haiku-4-5">Claude Haiku 4.5</option>
+            <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+            <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
           </select>
         </div>
       </div>
@@ -506,7 +505,7 @@
         <button class="btn btn-primary flex-1" id="start-analysis-btn">🤖 Analyze with AI</button>
         <button class="btn btn-secondary" id="upload-cancel-btn">Cancel</button>
       </div>
-      <div class="text-xs text-muted mt-3" style="text-align:center">Contract text is sent to Claude AI for analysis.</div>
+      <div class="text-xs text-muted mt-3" style="text-align:center">Contract text is sent to Gemini AI for analysis.</div>
     </div>
 
     <div id="upload-processing-state" class="hidden">

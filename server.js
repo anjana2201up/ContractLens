@@ -13,10 +13,10 @@ const cors         = require('cors');
 const app  = express();
 const PORT           = process.env.PORT        || 3000;
 const JWT_SECRET     = process.env.JWT_SECRET  || 'contractlens-super-secret-key-2024';
-const GLOBAL_API_KEY = process.env.ANTHROPIC_API_KEY || '';
-const GLOBAL_MODEL   = process.env.ANTHROPIC_MODEL   || 'claude-sonnet-4-5';
-const UPSTASH_URL    = process.env.UPSTASH_REDIS_REST_URL   || '';
-const UPSTASH_TOKEN  = process.env.UPSTASH_REDIS_REST_TOKEN || '';
+const GLOBAL_API_KEY = process.env.GEMINI_API_KEY || '';
+const GLOBAL_MODEL   = process.env.GEMINI_MODEL   || 'gemini-1.5-flash';
+const UPSTASH_URL    = process.env.UPSTASH_REDIS_REST_URL   || process.env.KV_REST_API_URL || '';
+const UPSTASH_TOKEN  = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN || '';
 
 // ─── Helpers ──────────────────────────────────────────────────
 function getEffectiveKey(user)   { return (user?.apiKey) || GLOBAL_API_KEY || null; }
@@ -89,13 +89,23 @@ function authMiddleware(req, res, next) {
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } });
 
 // ─── AI Helpers ───────────────────────────────────────────────
-async function callClaude(apiKey, model, messages, system, maxTokens) {
-  const Anthropic = require('@anthropic-ai/sdk');
-  const client = new Anthropic.default({ apiKey });
-  const params = { model: model || 'claude-sonnet-4-5', max_tokens: maxTokens || 2000, messages };
-  if (system) params.system = system;
-  const msg = await client.messages.create(params);
-  return msg.content[0].text;
+async function callAI(apiKey, model, messages, system, maxTokens) {
+  const { GoogleGenerativeAI } = require('@google/generative-ai');
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const aiModel = genAI.getGenerativeModel({ 
+    model: model || 'gemini-1.5-flash',
+    systemInstruction: system
+  });
+  
+  const history = messages.slice(0, -1).map(m => ({
+    role: m.role === 'user' ? 'user' : 'model',
+    parts: [{ text: m.content }]
+  }));
+  const lastMessage = messages[messages.length - 1].content;
+  
+  const chat = aiModel.startChat({ history });
+  const result = await chat.sendMessage(lastMessage);
+  return result.response.text();
 }
 
 function parseJSON(raw) {
@@ -163,7 +173,7 @@ app.post('/api/auth/register', async (req, res) => {
     if (existing) return res.status(409).json({ error: 'An account with this email already exists.' });
     const id = uuidv4();
     const passwordHash = await bcrypt.hash(password, 12);
-    const user = { id, name, email: email.toLowerCase(), passwordHash, apiKey: '', model: 'claude-sonnet-4-5', criticalThreshold: 14, warningThreshold: 45, createdAt: new Date().toISOString(), avatar: name.charAt(0).toUpperCase() };
+    const user = { id, name, email: email.toLowerCase(), passwordHash, apiKey: '', model: 'gemini-1.5-flash', criticalThreshold: 14, warningThreshold: 45, createdAt: new Date().toISOString(), avatar: name.charAt(0).toUpperCase() };
     await saveUser(user);
     const token = jwt.sign({ id, email: email.toLowerCase(), name }, JWT_SECRET, { expiresIn: '30d' });
     res.json({ token, user: { id, name, email: email.toLowerCase(), avatar: user.avatar } });
@@ -257,10 +267,10 @@ app.post('/api/contracts/:id/analyze', authMiddleware, async (req, res) => {
   try {
     const user = await getUserById(req.user.id);
     const apiKey = getEffectiveKey(user);
-    if (!apiKey) return res.status(400).json({ error: 'No API key configured. Set ANTHROPIC_API_KEY in environment variables.' });
+    if (!apiKey) return res.status(400).json({ error: 'No API key configured. Set GEMINI_API_KEY in environment variables.' });
     const c = await getContractById(req.params.id);
     if (!c || c.userId !== req.user.id) return res.status(404).json({ error: 'Contract not found.' });
-    const raw = await callClaude(apiKey, getEffectiveModel(user), [{ role: 'user', content: buildExtractionPrompt(c.text) }], null, 8000);
+    const raw = await callAI(apiKey, getEffectiveModel(user), [{ role: 'user', content: buildExtractionPrompt(c.text) }], null, 8000);
     const analysis = parseJSON(raw);
     c.analysis = analysis;
     await saveContract(c);
@@ -278,7 +288,7 @@ app.post('/api/contracts/compare', authMiddleware, async (req, res) => {
     const cB = await getContractById(contractBId);
     if (!cA || cA.userId !== req.user.id) return res.status(404).json({ error: 'Contract A not found.' });
     if (!cB || cB.userId !== req.user.id) return res.status(404).json({ error: 'Contract B not found.' });
-    const raw = await callClaude(apiKey, getEffectiveModel(user), [{ role: 'user', content: buildComparisonPrompt(cA.text, cB.text, cA.name, cB.name) }], null, 4000);
+    const raw = await callAI(apiKey, getEffectiveModel(user), [{ role: 'user', content: buildComparisonPrompt(cA.text, cB.text, cA.name, cB.name) }], null, 4000);
     res.json(parseJSON(raw));
   } catch (err) { console.error('Compare:', err.message); res.status(500).json({ error: err.message }); }
 });
@@ -299,7 +309,7 @@ CONTRACT TEXT:
 ---
 ${c.text ? c.text.slice(0, 15000) : ''}
 ---`;
-    const raw = await callClaude(apiKey, getEffectiveModel(user), messages, system, 2000);
+    const raw = await callAI(apiKey, getEffectiveModel(user), messages, system, 2000);
     res.json({ response: raw });
   } catch (err) { console.error('Chat:', err.message); res.status(500).json({ error: err.message }); }
 });

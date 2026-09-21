@@ -733,7 +733,7 @@ const Views = {
     }
     if (s) {
       const model = document.getElementById('model-select');
-      if (model) model.value = s.model || 'claude-sonnet-4-5';
+      if (model) model.value = s.model || 'gemini-1.5-flash';
       const crit = document.getElementById('critical-threshold');
       if (crit) crit.value  = s.criticalThreshold || 14;
       const warn = document.getElementById('warning-threshold');
@@ -747,7 +747,7 @@ const Views = {
           banner.innerHTML = '✅ <span>Global API key is <strong>active</strong> — AI features work for all users automatically. You can optionally add a personal key to override it.</span>';
         } else if (!s.hasPersonalKey) {
           banner.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;margin-bottom:16px;font-size:13px;font-weight:600;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.28);color:#fde68a';
-          banner.innerHTML = '⚠️ <span>No API key configured. Edit <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;font-family:monospace">.env</code> and set <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;font-family:monospace">ANTHROPIC_API_KEY</code>, or add a personal key below.</span>';
+          banner.innerHTML = '⚠️ <span>No API key configured. Edit <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;font-family:monospace">.env</code> and set <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;font-family:monospace">GEMINI_API_KEY</code>, or add a personal key below.</span>';
         } else {
           banner.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;margin-bottom:16px;font-size:13px;font-weight:600;background:rgba(79,141,255,.1);border:1px solid rgba(79,141,255,.3);color:#93c5fd';
           banner.innerHTML = '🔑 <span>Personal API key is active. Your key takes priority over any global key.</span>';
@@ -822,7 +822,7 @@ const Upload = {
       // 2. Create contract record
       const contract = await BackendAPI.createContract({ name, type, notes, text, fileName: State.uploadFile.name });
       State.contracts.unshift(contract);
-      this.setProgress(40, 'Sending to Claude AI…', 'Extracting parties, dates, obligations');
+      this.setProgress(40, 'Sending to Gemini AI…', 'Extracting parties, dates, obligations');
 
       // 3. Run AI analysis
       const { analysis } = await BackendAPI.analyzeContract(contract.id);
